@@ -1,5 +1,4 @@
 name: Release
-
 on:
   push:
     tags:
@@ -9,16 +8,18 @@ permissions:
   contents: write
   packages: write
 
-env:
-  IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      REPO_RAW: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
 
       - name: Install deps
         run: |
@@ -30,15 +31,25 @@ jobs:
           python -m src.train --out_dir models
           cat models/metrics.json
 
-      - name: Build image
-        run: docker build -t $IMAGE .
-
-      - name: Smoke test container
+      - name: Normalize image name (lowercase for GHCR)
+        id: name
         run: |
-          cid=$(docker run -d -p 8000:8000 $IMAGE)
-          echo "Container $cid"
-          sleep 2
-          curl -sSf http://127.0.0.1:8000/health | tee health.json
+          echo "image=ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        run: docker build -t ${{ steps.name.outputs.image }} .
+
+      - name: Smoke test container (retry for readiness)
+        run: |
+          cid=$(docker run -d -p 8000:8000 ${{ steps.name.outputs.image }})
+          echo "Container: $cid"
+          for i in {1..15}; do
+            if curl -sSf http://127.0.0.1:8000/health > health.json; then
+              break
+            fi
+            echo "Waiting for API... ($i)"; sleep 2
+          done
+          cat health.json
           curl -sSf -X POST http://127.0.0.1:8000/predict \
             -H 'Content-Type: application/json' \
             -d '{"age":0.02,"sex":-0.044,"bmi":0.06,"bp":-0.03,"s1":-0.02,"s2":0.03,"s3":-0.02,"s4":0.02,"s5":0.02,"s6":-0.001}' \
@@ -52,21 +63,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push image
+      - name: Push image (patch & minor tags)
         run: |
-          docker push $IMAGE
-          # also push minor tag v0.1 for the graders
-          MINOR=${{ github.ref_name }}; MINOR=${MINOR%.*}
-          docker tag $IMAGE ghcr.io/${{ github.repository }}:${MINOR}
-          docker push ghcr.io/${{ github.repository }}:${MINOR}
+          docker push ${{ steps.name.outputs.image }}
+          # also push minor tag v0.1
+          MINOR=${TAG%.*}
+          docker tag ${{ steps.name.outputs.image }} ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${MINOR}
+          docker push ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${MINOR}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
           body: |
-            v0.1 baseline release. See CHANGELOG.md for details.
+            Automated release for ${{ env.TAG }}.
+            See CHANGELOG.md for details. Metrics attached.
           files: |
             models/metrics.json
             CHANGELOG.md
