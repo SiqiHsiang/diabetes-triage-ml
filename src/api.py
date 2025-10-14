@@ -33,7 +33,7 @@ def health():
 @app.post("/predict")
 def predict(body: PredictRequest):
     try:
-        pred = float(model.predict(body.as_row())[0])
+        pred = float(model.predict(body.as_frame())[0])
         return {"prediction": pred}
     except Exception as e:
         return JSONResponse(
