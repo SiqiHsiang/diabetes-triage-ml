@@ -1,4 +1,4 @@
 __pycache__/
-.venv/
+.diab_env/
 models/
 .pytest_cache/
