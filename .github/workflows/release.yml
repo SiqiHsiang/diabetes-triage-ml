@@ -37,7 +37,7 @@ jobs:
           echo "image=ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${TAG}" >> $GITHUB_OUTPUT
 
       - name: Build image
-        run: docker build -t ${{ steps.name.outputs.image }} .
+        run: docker build --build-arg MODEL_KIND=ridge -t ${{ steps.name.outputs.image }} .
 
       - name: Smoke test container (retry for readiness)
         run: |
