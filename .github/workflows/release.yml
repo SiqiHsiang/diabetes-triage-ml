@@ -28,7 +28,7 @@ jobs:
 
       - name: Train deterministically
         run: |
-          python -m src.train --out_dir models
+          python -m src.train --out_dir models --kind ridge
           cat models/metrics.json
 
       - name: Normalize image name (lowercase for GHCR)
