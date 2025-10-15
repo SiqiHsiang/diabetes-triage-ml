@@ -1,5 +1,6 @@
 # src/api.py
-import os, json
+import os
+import json
 import joblib
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse

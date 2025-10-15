@@ -4,9 +4,16 @@ import pandas as pd
 FEATURE_NAMES = ["age","sex","bmi","bp","s1","s2","s3","s4","s5","s6"]
 
 class PredictRequest(BaseModel):
-    age: float; sex: float; bmi: float; bp: float
-    s1: float; s2: float; s3: float; s4: float; s5: float; s6: float
+    age: float
+    sex: float
+    bmi: float
+    bp: float
+    s1: float
+    s2: float
+    s3: float
+    s4: float
+    s5: float
+    s6: float
 
     def as_frame(self) -> "pd.DataFrame":
-        row = {f: getattr(self, f) for f in FEATURE_NAMES}
-        return pd.DataFrame([row], columns=FEATURE_NAMES)
+        return pd.DataFrame([self.model_dump()])

@@ -1,5 +1,6 @@
 .diab_env/
+.ci_env/
 .venv/
 __pycache__/
 .pytest_cache/
-models/
+models/.ci_env/

@@ -1,4 +1,8 @@
-import json, os, subprocess, sys, tempfile, pathlib
+import json
+import subprocess
+import sys
+import tempfile
+import pathlib
 
 def test_training_produces_artifacts():
     with tempfile.TemporaryDirectory() as d:
