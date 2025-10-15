@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 ARG MODEL_KIND=linear
 ENV MODEL_KIND=${MODEL_KIND}
-RUN python -m src.train --out_dir models --kind ${MODEL_KIND}
+RUN echo ">> MODEL_KIND=${MODEL_KIND}" && python -m src.train --out_dir models --kind ${MODEL_KIND}
 
 # ---------- Runtime stage: lightweight server image ----------
 FROM python:3.11-slim

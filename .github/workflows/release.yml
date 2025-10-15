@@ -31,13 +31,12 @@ jobs:
           python -m src.train --out_dir models --kind ridge
           cat models/metrics.json
 
-      - name: Normalize image name (lowercase for GHCR)
+      - name: Normalize image name (lowercase)
         id: name
-        run: |
-          echo "image=ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${TAG}" >> $GITHUB_OUTPUT
+        run: echo "image=ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${TAG}" >> $GITHUB_OUTPUT
 
       - name: Build image
-        run: docker build --build-arg MODEL_KIND=ridge -t ${{ steps.name.outputs.image }} .
+        run: docker build --no-cache --pull --build-arg MODEL_KIND=ridge -t ${{ steps.name.outputs.image }} .
 
       - name: Smoke test container (retry for readiness)
         run: |
@@ -63,13 +62,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push image (patch & minor tags)
+      - name: Push image (patch + minor tag)
         run: |
           docker push ${{ steps.name.outputs.image }}
-          # also push minor tag v0.1
           MINOR=${TAG%.*}
-          docker tag ${{ steps.name.outputs.image }} ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${MINOR}
-          docker push ghcr.io/$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]'):${MINOR}
+          LOWER=$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]')
+          docker tag ${{ steps.name.outputs.image }} ghcr.io/${LOWER}:${MINOR}
+          docker push ghcr.io/${LOWER}:${MINOR}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
