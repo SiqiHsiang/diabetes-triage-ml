@@ -13,7 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source and train inside the image so the model is self-contained
 COPY src/ src/
-RUN python -m src.train --out_dir models
+ARG MODEL_KIND=linear
+ENV MODEL_KIND=${MODEL_KIND}
+RUN python -m src.train --out_dir models --kind ${MODEL_KIND}
 
 # ---------- Runtime stage: lightweight server image ----------
 FROM python:3.11-slim
