@@ -95,5 +95,8 @@ uvicorn src.api:app --reload --port 8000
 	•	Release workflow builds and pushes images to GHCR with semantic version tags (v0.1, v0.2, etc.).
 	•	Docker images are self-contained and include the trained model.
 
-## 7. Authors
-Group AG
+## 7. CI badge
+<img width="711" height="74" alt="image" src="https://github.com/user-attachments/assets/6ec7c124-6103-4598-b57a-c610ca55d252" />
+
+## 8. Authors: Group AG
+
